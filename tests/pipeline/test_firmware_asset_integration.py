@@ -14,6 +14,9 @@ def test_generated_art_is_wired_into_firmware_sources():
     assert "zephyr_library_sources(widgets/generated_art.c)" in cmake_text
     assert "LV_IMG_DECLARE(anime_portrait);" in peripheral_text
     assert "LV_IMG_DECLARE(anime_portrait_inverted);" in peripheral_text
-    assert "IS_ENABLED(CONFIG_NICE_VIEW_WIDGET_INVERTED)" in peripheral_text
+    assert "IS_ENABLED(CONFIG_NICE_VIEW_WIDGET_ART_INVERTED)" in peripheral_text
     assert "&anime_portrait_inverted" in peripheral_text
     assert "&anime_portrait" in peripheral_text
+    assert "config NICE_VIEW_WIDGET_ART_INVERTED" in (
+        repo_root / "boards/shields/nice_view_custom/Kconfig.defconfig"
+    ).read_text()

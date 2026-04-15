@@ -114,7 +114,8 @@ int zmk_widget_status_init(struct zmk_widget_status *widget, lv_obj_t *parent) {
 
     lv_obj_t *art = lv_img_create(widget->obj);
     const lv_img_dsc_t *portrait =
-        IS_ENABLED(CONFIG_NICE_VIEW_WIDGET_INVERTED) ? &anime_portrait_inverted : &anime_portrait;
+        IS_ENABLED(CONFIG_NICE_VIEW_WIDGET_ART_INVERTED) ? &anime_portrait_inverted
+                                                         : &anime_portrait;
     lv_img_set_src(art, portrait);
     lv_obj_align(art, LV_ALIGN_TOP_LEFT, 0, 0);
 
