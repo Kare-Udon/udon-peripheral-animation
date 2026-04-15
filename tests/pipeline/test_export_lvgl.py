@@ -44,10 +44,13 @@ def test_export_lvgl_generates_c_and_h_files(tmp_path: Path):
     h_text = h_path.read_text()
 
     assert "LV_IMG_CF_INDEXED_1BIT" in c_text
+    assert "const lv_img_dsc_t demo_job =" in c_text
+    assert "const lv_img_dsc_t demo_job_inverted =" in c_text
     assert ".header.w = 140" in c_text
     assert ".header.h = 68" in c_text
     assert ".data_size = 1232" in c_text
     assert "extern const lv_img_dsc_t demo_job;" in h_text
+    assert "extern const lv_img_dsc_t demo_job_inverted;" in h_text
 
     manifest = JobManifest.read(job_root / "manifest.json")
     assert manifest.stages["export_lvgl"].status is StageStatus.COMPLETED

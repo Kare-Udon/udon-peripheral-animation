@@ -3,3 +3,4 @@
 #include <lvgl.h>
 
 extern const lv_img_dsc_t anime_portrait;
+extern const lv_img_dsc_t anime_portrait_inverted;

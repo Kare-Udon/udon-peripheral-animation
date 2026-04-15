@@ -43,6 +43,35 @@ def _format_bytes(values: list[int], indent: str = "        ") -> str:
     return "\n".join(lines)
 
 
+def _render_asset_block(asset_name: str, bitmap: list[int], width: int, height: int) -> str:
+    return f"""#ifndef LV_ATTRIBUTE_IMG_{asset_name.upper()}
+#define LV_ATTRIBUTE_IMG_{asset_name.upper()}
+#endif
+
+const LV_ATTRIBUTE_MEM_ALIGN LV_ATTRIBUTE_LARGE_CONST LV_ATTRIBUTE_IMG_{asset_name.upper()} uint8_t
+    {asset_name}_map[] = {{
+#if CONFIG_NICE_VIEW_WIDGET_INVERTED
+        0xff, 0xff, 0xff, 0xff, /*Color of index 0*/
+        0x00, 0x00, 0x00, 0xff, /*Color of index 1*/
+#else
+        0x00, 0x00, 0x00, 0xff, /*Color of index 0*/
+        0xff, 0xff, 0xff, 0xff, /*Color of index 1*/
+#endif
+{_format_bytes(bitmap)}
+}};
+
+const lv_img_dsc_t {asset_name} = {{
+    .header.cf = LV_IMG_CF_INDEXED_1BIT,
+    .header.always_zero = 0,
+    .header.reserved = 0,
+    .header.w = {width},
+    .header.h = {height},
+    .data_size = {8 + len(bitmap)},
+    .data = {asset_name}_map,
+}};
+"""
+
+
 def run_stage(manifest) -> list[str]:
     input_path = manifest.root_dir / manifest.stages["cleanup"].outputs[0]
     asset_name = _sanitize_name(manifest.job_id)
@@ -54,44 +83,19 @@ def run_stage(manifest) -> list[str]:
         image = image.convert("L")
         image = image.point(lambda px: 255 if px > 0 else 0)
         rotated = image.transpose(Image.Transpose.ROTATE_270)
-
-    packed = [
-        0x00,
-        0x00,
-        0x00,
-        0xFF,
-        0xFF,
-        0xFF,
-        0xFF,
-        0xFF,
-        *_pack_indexed_1bit(rotated),
-    ]
+        inverted = rotated.point(lambda px: 0 if px > 0 else 255)
 
     width, height = rotated.size
+    packed = _pack_indexed_1bit(rotated)
+    inverted_packed = _pack_indexed_1bit(inverted)
     c_text = f"""#include <lvgl.h>
 
 #ifndef LV_ATTRIBUTE_MEM_ALIGN
 #define LV_ATTRIBUTE_MEM_ALIGN
 #endif
 
-#ifndef LV_ATTRIBUTE_IMG_{asset_name.upper()}
-#define LV_ATTRIBUTE_IMG_{asset_name.upper()}
-#endif
-
-const LV_ATTRIBUTE_MEM_ALIGN LV_ATTRIBUTE_LARGE_CONST LV_ATTRIBUTE_IMG_{asset_name.upper()} uint8_t
-    {asset_name}_map[] = {{
-{_format_bytes(packed)}
-}};
-
-const lv_img_dsc_t {asset_name} = {{
-    .header.cf = LV_IMG_CF_INDEXED_1BIT,
-    .header.always_zero = 0,
-    .header.reserved = 0,
-    .header.w = {width},
-    .header.h = {height},
-    .data_size = {len(packed)},
-    .data = {asset_name}_map,
-}};
+{_render_asset_block(asset_name, packed, width, height)}
+{_render_asset_block(f"{asset_name}_inverted", inverted_packed, width, height)}
 """
 
     h_text = f"""#pragma once
@@ -99,6 +103,7 @@ const lv_img_dsc_t {asset_name} = {{
 #include <lvgl.h>
 
 extern const lv_img_dsc_t {asset_name};
+extern const lv_img_dsc_t {asset_name}_inverted;
 """
 
     c_path.write_text(c_text)

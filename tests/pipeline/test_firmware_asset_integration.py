@@ -13,4 +13,7 @@ def test_generated_art_is_wired_into_firmware_sources():
     assert art_path.exists()
     assert "zephyr_library_sources(widgets/generated_art.c)" in cmake_text
     assert "LV_IMG_DECLARE(anime_portrait);" in peripheral_text
-    assert 'lv_img_set_src(art, &anime_portrait);' in peripheral_text
+    assert "LV_IMG_DECLARE(anime_portrait_inverted);" in peripheral_text
+    assert "IS_ENABLED(CONFIG_NICE_VIEW_WIDGET_INVERTED)" in peripheral_text
+    assert "&anime_portrait_inverted" in peripheral_text
+    assert "&anime_portrait" in peripheral_text
