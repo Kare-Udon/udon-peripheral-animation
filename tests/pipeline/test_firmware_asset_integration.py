@@ -20,3 +20,4 @@ def test_generated_art_is_wired_into_firmware_sources():
     assert "config NICE_VIEW_WIDGET_ART_INVERTED" in (
         repo_root / "boards/shields/nice_view_custom/Kconfig.defconfig"
     ).read_text()
+    assert "CONFIG_NICE_VIEW_WIDGET_INVERTED" not in art_path.read_text()

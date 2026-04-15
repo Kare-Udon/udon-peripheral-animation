@@ -46,6 +46,7 @@ def test_export_lvgl_generates_c_and_h_files(tmp_path: Path):
     assert "LV_IMG_CF_INDEXED_1BIT" in c_text
     assert "const lv_img_dsc_t demo_job =" in c_text
     assert "const lv_img_dsc_t demo_job_inverted =" in c_text
+    assert "CONFIG_NICE_VIEW_WIDGET_INVERTED" not in c_text
     assert ".header.w = 140" in c_text
     assert ".header.h = 68" in c_text
     assert ".data_size = 1232" in c_text
