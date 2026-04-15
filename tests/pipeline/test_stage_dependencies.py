@@ -75,6 +75,47 @@ def test_stage_rerun_marks_downstream_stale(tmp_path: Path):
     assert manifest.stages["quantize"].status is StageStatus.STALE
 
 
+def test_stage_next_executes_stale_stage_after_rerun(tmp_path: Path):
+    manifest_path = _init_job(tmp_path)
+
+    assert (
+        main(["stage", "next", "demo-job", "--artifacts-root", str(tmp_path / "artifacts")]) == 0
+    )
+    assert (
+        main(["stage", "next", "demo-job", "--artifacts-root", str(tmp_path / "artifacts")]) == 0
+    )
+    assert (
+        main(
+            [
+                "stage",
+                "rerun",
+                "demo-job",
+                "compose",
+                "--artifacts-root",
+                str(tmp_path / "artifacts"),
+            ]
+        )
+        == 0
+    )
+
+    exit_code = main(
+        [
+            "stage",
+            "next",
+            "demo-job",
+            "--artifacts-root",
+            str(tmp_path / "artifacts"),
+        ]
+    )
+
+    assert exit_code == 0
+
+    manifest = JobManifest.read(manifest_path)
+    assert manifest.stages["grayscale"].status is StageStatus.COMPLETED
+    assert manifest.stages["quantize"].status is StageStatus.STALE
+    assert manifest.current_stage == "quantize"
+
+
 def test_job_status_prints_stage_summary(tmp_path: Path, capsys):
     _init_job(tmp_path)
 

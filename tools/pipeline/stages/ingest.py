@@ -9,6 +9,7 @@ from PIL import Image
 
 from tools.pipeline.config import DEFAULT_ROTATED_SIZE, DEFAULT_STAGE_ORDER, DEFAULT_TARGET_SIZE
 from tools.pipeline.models import JobManifest, StageRecord, StageStatus
+from tools.pipeline.presets import get_preset
 
 
 def initialize_job(
@@ -16,7 +17,7 @@ def initialize_job(
     artifacts_root: Path,
     job_id: str,
     preset: str = "anime",
-    pattern_set: str = "default_2x2",
+    pattern_set: str | None = None,
     levels: int = 5,
 ) -> JobManifest:
     job_root = artifacts_root / "jobs" / job_id
@@ -28,6 +29,9 @@ def initialize_job(
 
     with Image.open(copied_input_path) as image:
         original_size = (image.width, image.height)
+
+    preset_config = get_preset(preset)
+    resolved_pattern_set = str(pattern_set or preset_config.get("pattern_set", "default_2x2"))
 
     stages: dict[str, StageRecord] = {}
     for name in DEFAULT_STAGE_ORDER:
@@ -48,7 +52,7 @@ def initialize_job(
         target_size=DEFAULT_TARGET_SIZE,
         rotated_size=DEFAULT_ROTATED_SIZE,
         preset=preset,
-        pattern_set=pattern_set,
+        pattern_set=resolved_pattern_set,
         levels=levels,
         stage_order=DEFAULT_STAGE_ORDER,
         current_stage="compose",

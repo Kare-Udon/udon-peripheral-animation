@@ -23,7 +23,7 @@ def build_parser() -> argparse.ArgumentParser:
     init_parser.add_argument("--artifacts-root", default="artifacts")
     init_parser.add_argument("--job-id", required=True)
     init_parser.add_argument("--preset", default="anime")
-    init_parser.add_argument("--pattern-set", default="default_2x2")
+    init_parser.add_argument("--pattern-set")
     init_parser.add_argument("--levels", type=int, default=5)
 
     status_parser = job_subparsers.add_parser("status")
@@ -63,9 +63,12 @@ def _save_manifest(manifest: JobManifest) -> None:
     manifest.write(manifest.manifest_path())
 
 
-def _find_first_ready_stage(manifest: JobManifest) -> str | None:
+def _find_first_actionable_stage(manifest: JobManifest) -> str | None:
     for stage_name in manifest.stage_order:
         if manifest.stages[stage_name].status is StageStatus.READY:
+            return stage_name
+    for stage_name in manifest.stage_order:
+        if manifest.stages[stage_name].status is StageStatus.STALE:
             return stage_name
     return None
 
@@ -178,9 +181,9 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "stage" and args.stage_command == "next":
         manifest = _load_manifest(Path(args.artifacts_root), args.job_id)
-        stage_name = _find_first_ready_stage(manifest)
+        stage_name = _find_first_actionable_stage(manifest)
         if stage_name is None:
-            parser.error("no ready stage found")
+            parser.error("no actionable stage found")
         _execute_stage(manifest, stage_name)
         _save_manifest(manifest)
         return 0
