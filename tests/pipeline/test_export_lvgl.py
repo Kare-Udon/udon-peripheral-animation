@@ -4,6 +4,15 @@ from PIL import Image
 
 from tools.pipeline.main import main
 from tools.pipeline.models import JobManifest, StageStatus
+from tools.pipeline.stages.export_lvgl import _pack_indexed_1bit
+
+
+def test_pack_indexed_1bit_uses_black_as_set_bit():
+    image = Image.new("L", (8, 1), color=255)
+    for x in range(0, 8, 2):
+        image.putpixel((x, 0), 0)
+
+    assert _pack_indexed_1bit(image) == [0xAA]
 
 
 def test_export_lvgl_generates_c_and_h_files(tmp_path: Path):

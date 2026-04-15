@@ -14,7 +14,7 @@ def _sanitize_name(job_id: str) -> str:
 
 def _pack_indexed_1bit(image: Image.Image) -> list[int]:
     pixels = np.array(image.convert("L"), dtype=np.uint8)
-    bits = (pixels > 0).astype(np.uint8)
+    bits = (pixels == 0).astype(np.uint8)
 
     height, width = bits.shape
     bytes_per_row = (width + 7) // 8
